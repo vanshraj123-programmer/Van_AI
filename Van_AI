@@ -1,0 +1,198 @@
+# =========================================
+# 🤖 VAN_AI - Day 1 (FINAL v1.2)
+# =========================================
+
+from sympy import *
+from sympy.parsing.sympy_parser import (
+    parse_expr, standard_transformations,
+    implicit_multiplication_application
+)
+
+# Parser setup
+transformations = standard_transformations + (implicit_multiplication_application,)
+
+x = symbols('x')
+
+# ---------------------------
+# 🔒 Helpers
+# ---------------------------
+def preprocess(expr):
+    expr = expr.replace(" ", "")
+    expr = expr.replace("^", "**")
+    expr = expr.replace("√", "sqrt")
+    return expr
+
+def split_args(text):
+    parts, bracket, current = [], 0, ""
+    for ch in text:
+        if ch == "," and bracket == 0:
+            parts.append(current.strip())
+            current = ""
+        else:
+            if ch in "([{": bracket += 1
+            elif ch in ")]}": bracket -= 1
+            current += ch
+    if current:
+        parts.append(current.strip())
+    return parts
+
+def to_int(val):
+    v = sympify(val)
+    if not v.is_integer:
+        raise ValueError("Must be integer")
+    return int(v)
+
+# ---------------------------
+# 📘 HELP MENU
+# ---------------------------
+def show_help():
+    print("""
+================= 📘 VAN_AI GUIDE =================
+
+🔢 BASIC OPERATIONS:
+  2+3*4           → Addition, subtraction, multiplication, division
+  2^5             → Power
+  sqrt(16)        → Square root
+
+📊 FACTORIAL:
+  5!              → Factorial of 5
+  (5)!            → Also valid
+
+🔢 COMPLEX NUMBERS:
+  2+3i            → Use i for imaginary
+  (2+3i)*(1-i)
+
+📊 COMBINATORICS:
+  nCr(5,2)        → Combination (5 choose 2)
+  nPr(5,2)        → Permutation
+
+📐 NUMBER THEORY:
+  lcm(12,18)      → Least Common Multiple
+  hcf(12,18)      → Highest Common Factor
+
+📦 FACTORING:
+  factor(x^2-9)   → Factor algebraic expression
+
+⚠ RULES:
+- Use integers in nCr, nPr, lcm, hcf
+- Factorial only for non-negative integers
+- Type 'exit' to quit
+
+===================================================
+""")
+
+# ---------------------------
+# 🚀 ENGINE
+# ---------------------------
+def day1_engine():
+    print("🤖 VAN_AI Day 1 - FINAL v1.2")
+    print("Type 'help' to see all commands\n")
+
+    while True:
+        user_input = input("Day1> ").strip()
+
+        if user_input.lower() == "exit":
+            print("👋 Exiting VAN_AI")
+            break
+
+        if user_input.lower() == "help":
+            show_help()
+            continue
+
+        try:
+            expr = preprocess(user_input)
+
+            # ---------------------------
+            # Factorial
+            # ---------------------------
+            if expr.endswith("!"):
+                core = expr[:-1].strip("()")
+                n = sympify(core)
+
+                if not n.is_integer or n < 0:
+                    raise ValueError("Factorial needs non-negative integer")
+
+                print("📊 Factorial =", factorial(int(n)))
+
+            # ---------------------------
+            # Combination
+            # ---------------------------
+            elif expr.startswith("nCr("):
+                args = split_args(expr[4:-1])
+                if len(args) != 2:
+                    raise ValueError("Use nCr(n,r)")
+
+                n, r = to_int(args[0]), to_int(args[1])
+
+                if r > n or n < 0 or r < 0:
+                    raise ValueError("Invalid nCr values")
+
+                print("📊 nCr =", binomial(n, r))
+
+            # ---------------------------
+            # Permutation
+            # ---------------------------
+            elif expr.startswith("nPr("):
+                args = split_args(expr[4:-1])
+                if len(args) != 2:
+                    raise ValueError("Use nPr(n,r)")
+
+                n, r = to_int(args[0]), to_int(args[1])
+
+                if r > n or n < 0 or r < 0:
+                    raise ValueError("Invalid nPr values")
+
+                print("📊 nPr =", factorial(n) // factorial(n - r))
+
+            # ---------------------------
+            # LCM
+            # ---------------------------
+            elif expr.startswith("lcm("):
+                args = split_args(expr[4:-1])
+                if not args:
+                    raise ValueError("Provide numbers")
+
+                nums = [to_int(i) for i in args]
+                print("📊 LCM =", lcm(*nums))
+
+            # ---------------------------
+            # HCF
+            # ---------------------------
+            elif expr.startswith("hcf("):
+                args = split_args(expr[4:-1])
+                if not args:
+                    raise ValueError("Provide numbers")
+
+                nums = [to_int(i) for i in args]
+                print("📊 HCF =", gcd(*nums))
+
+            # ---------------------------
+            # Factor
+            # ---------------------------
+            elif expr.startswith("factor("):
+                inside = expr[7:-1]
+                parsed = parse_expr(inside, transformations=transformations)
+                print("📦 Factorized =", factor(parsed))
+
+            # ---------------------------
+            # Default (math + complex)
+            # ---------------------------
+            else:
+                # safer complex handling
+                expr = expr.replace("i", "*I")
+                expr = expr.replace("**I", "**I").replace("(*I", "(I")
+
+                parsed = parse_expr(expr, transformations=transformations)
+
+                if parsed.has(zoo):
+                    raise ValueError("Division by zero")
+
+                print("🧮 Result =", simplify(parsed))
+
+        except Exception as e:
+            print("❌ Error:", str(e))
+
+
+# Run
+if __name__ == "__main__":
+    day1_engine()
